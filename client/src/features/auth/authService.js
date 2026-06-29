@@ -1,5 +1,7 @@
 // import axios from "axios"
 
+import API from "../../../axiosConfig";
+
 
 // const register = async (formData) => {
 //     const response = await axios.post("/api/auth/register", formData)
@@ -26,7 +28,7 @@
 
 // export default authService
 
-import API from "../../app/axiosConfig"; // apne path ke hisab se adjust kar lena
+// apne path ke hisab se adjust kar lena
 
 const register = async (formData) => {
     const response = await API.post("/api/auth/register", formData);
