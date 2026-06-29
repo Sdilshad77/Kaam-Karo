@@ -21,7 +21,7 @@ const app = express()
 connectDB()
 
 // CORS
-app.use(cors({ origin:[["https://kaam-karo-wri3.vercel.app",'http://localhost:5173']], credentials: true }))
+app.use(cors({ origin:["https://kaam-karo-wri3.vercel.app",'http://localhost:5173'], credentials: true }))
 
 // Body-Parser
 app.use(express.json())
