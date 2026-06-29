@@ -1,4 +1,5 @@
-import API from "../../../axiosConfig";
+import API from "../axiosConfig";
+
 
 
 const fetchAllUsers = async (token) => {

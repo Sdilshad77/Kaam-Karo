@@ -1,6 +1,6 @@
 // import axios from "axios"
 
-import API from "../../../axiosConfig";
+import API from "../axiosConfig";
 
 
 // const register = async (formData) => {

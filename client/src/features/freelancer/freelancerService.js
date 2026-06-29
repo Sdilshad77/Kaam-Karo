@@ -1,6 +1,6 @@
 
 
-import API from "../../../axiosConfig";
+import API from "../axiosConfig";
 
 const fetchFreelancers = async () => {
     const response = await API.get("/api/freelancer/")
