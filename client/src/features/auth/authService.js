@@ -1,27 +1,62 @@
-import axios from "axios"
+// import axios from "axios"
 
+
+// const register = async (formData) => {
+//     const response = await axios.post("/api/auth/register", formData)
+//     localStorage.setItem('user', JSON.stringify(response.data))
+//     return response.data
+// }
+
+// const login = async (formData) => {
+//     const response = await axios.post("/api/auth/login", formData)
+//     localStorage.setItem('user', JSON.stringify(response.data))
+//     return response.data
+// }
+
+// const updateProfile = async (formData, token) => {
+//     const options = { headers: { authorization: `Bearer ${token}` } }
+//     const response = await axios.put("/api/auth/update-profile", formData, options)
+//     localStorage.setItem('user', JSON.stringify(response.data))
+//     return response.data
+// }
+
+
+// const authService = { register, login, updateProfile }
+
+
+// export default authService
+
+import API from "../../app/axiosConfig"; // apne path ke hisab se adjust kar lena
 
 const register = async (formData) => {
-    const response = await axios.post("/api/auth/register", formData)
-    localStorage.setItem('user', JSON.stringify(response.data))
-    return response.data
-}
+    const response = await API.post("/api/auth/register", formData);
+    localStorage.setItem("user", JSON.stringify(response.data));
+    return response.data;
+};
 
 const login = async (formData) => {
-    const response = await axios.post("/api/auth/login", formData)
-    localStorage.setItem('user', JSON.stringify(response.data))
-    return response.data
-}
+    const response = await API.post("/api/auth/login", formData);
+    localStorage.setItem("user", JSON.stringify(response.data));
+    return response.data;
+};
 
 const updateProfile = async (formData, token) => {
-    const options = { headers: { authorization: `Bearer ${token}` } }
-    const response = await axios.put("/api/auth/update-profile", formData, options)
-    localStorage.setItem('user', JSON.stringify(response.data))
-    return response.data
-}
+    const options = {
+        headers: {
+            authorization: `Bearer ${token}`,
+        },
+    };
 
+    const response = await API.put(
+        "/api/auth/update-profile",
+        formData,
+        options
+    );
 
-const authService = { register, login, updateProfile }
+    localStorage.setItem("user", JSON.stringify(response.data));
+    return response.data;
+};
 
+const authService = { register, login, updateProfile };
 
-export default authService
+export default authService;
