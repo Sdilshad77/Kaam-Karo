@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* Base font — Poppins is loaded via index.html <link> tag */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "DM Sans", "Poppins", sans-serif;
+  margin: 0;
+  padding: 0;
+}

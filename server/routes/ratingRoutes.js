@@ -1,0 +1,12 @@
+import express from "express"
+
+import ratingController from "../controllers/ratingController.js"
+import protect from "../middleware/authMiddleware.js"
+
+const router = express.Router({ mergeParams: true })
+
+router.get("/", ratingController.getRatings)
+router.post("/", protect.forAuthUsers, ratingController.addRating)
+
+
+export default router
