@@ -2,6 +2,7 @@ import { Star, Edit2, Plus, Eye, CheckCircle, AlertCircle, Mail, UserCircle, Zap
 import { useDispatch, useSelector } from "react-redux"
 import { useEffect, useState } from "react"
 import { addPreviousProject, getFreelancer, becomeFreelancer, clearFreelancerError } from "../features/freelancer/freelancerSlice"
+import { updateUser } from "../features/auth/authSlice"
 import { getBids, getProjects, acceptBid } from "../features/project/projectSlice"
 import { updateProfile } from "../features/auth/authSlice"
 import PostWorkForm from "../components/PostWorkForm"
@@ -34,14 +35,36 @@ const styles = `
   /* ── COVER ── */
   .cover-wrap {
     position: relative;
-    height: 260px;
+    height: 220px;
     overflow: hidden;
+    border-radius: 0;
   }
 
   .cover-img {
     width: 100%; height: 100%;
     object-fit: cover;
-    opacity: 0.4;
+    opacity: 0.55;
+  }
+
+  /* Default gradient cover shown when no image */
+  .cover-default {
+    width: 100%; height: 100%;
+    background: linear-gradient(
+      135deg,
+      #0a0f1a 0%,
+      #0e1a0a 30%,
+      #0d0a1f 70%,
+      #080a0f 100%
+    );
+    position: relative;
+  }
+  .cover-default::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 80% at 20% 50%, rgba(200,255,100,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 80% at 80% 50%, rgba(180,125,255,0.08) 0%, transparent 60%);
   }
 
   .cover-overlay {
@@ -54,12 +77,13 @@ const styles = `
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(rgba(163,230,53,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(163,230,53,0.04) 1px, transparent 1px);
+      linear-gradient(rgba(200,255,100,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,255,100,0.04) 1px, transparent 1px);
     background-size: 48px 48px;
+    pointer-events: none;
   }
 
-  /* ── PROFILE CARD ── */
+
   .profile-container {
     max-width: 1100px;
     margin: 0 auto;
@@ -797,7 +821,7 @@ export default function UserProfile() {
   const dispatch = useDispatch()
 
   const isFreelancer = user?.isFreelancer
-  const myProjects = listedProjects?.filter((p) => p?.user?._id === user?._id) ?? []
+  const myProjects = listedProjects?.filter((p) => String(p?.user?._id) === String(user?._id)) ?? []
   const projects = freelancer?.previousWorks
 
   // ── UI state ────────────────────────────────────────────────────────────────
@@ -874,12 +898,12 @@ export default function UserProfile() {
     if (!description || !skills || !category || !experience) { toast.error("Please fill all fields"); return }
     dispatch(becomeFreelancer({ description, skills, category, experience: Number(experience) })).then((res) => {
       if (becomeFreelancer.fulfilled.match(res)) {
-        toast.success("You are now a Freelancer! 🎉 Refresh the page.")
+        toast.success("You are now a Freelancer! 🎉")
         setShowBecomeForm(false)
-        // update localStorage user
         const updatedUser = { ...user, isFreelancer: true }
+        dispatch(updateUser(updatedUser))
         localStorage.setItem('user', JSON.stringify(updatedUser))
-        window.location.reload() // force reload so Redux auth state updates from localStorage
+        dispatch(getFreelancer(updatedUser._id))
       } else {
         toast.error(res.payload || "Failed to register as freelancer")
       }
@@ -895,10 +919,14 @@ export default function UserProfile() {
     }
   }, [dispatch, user._id, isFreelancer])
 
-  // Error toasts — only show when error is truthy
+  // Error toasts — suppress "not found" for own profile (expected edge case)
   useEffect(() => {
     if (freelancerError && freelancerErrorMessage) {
-      toast.error(freelancerErrorMessage)
+      // "Freelancer Not Found" on profile page just means the doc is missing — not a user-facing error
+      const isNotFound = freelancerErrorMessage.toLowerCase().includes('not found')
+      if (!isNotFound) {
+        toast.error(freelancerErrorMessage)
+      }
       dispatch(clearFreelancerError())
     }
   }, [freelancerError, freelancerErrorMessage, dispatch])
@@ -916,12 +944,15 @@ export default function UserProfile() {
 
         {/* Cover */}
         <div className="cover-wrap">
-          <img src={user.coverImage || "/placeholder.svg"} alt="Cover" className="cover-img" />
+          {user.coverImage
+            ? <img src={user.coverImage} alt="Cover" className="cover-img" />
+            : <div className="cover-default" />
+          }
           <div className="cover-overlay" />
           <div className="cover-grid" />
         </div>
 
-        {/* Profile Card */}
+
         <div className="profile-container">
           <div className="profile-card">
             <img
@@ -947,16 +978,18 @@ export default function UserProfile() {
                 )}
               </div>
 
-              <div className="stars-row">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={15}
-                    className={i < Math.floor(user.rating || 0) ? "star-filled" : "star-empty"}
-                  />
-                ))}
-                <span className="rating-text">( reviews)</span>
-              </div>
+              {user.rating > 0 && (
+                <div className="stars-row">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={15}
+                      className={i < Math.floor(user.rating) ? "star-filled" : "star-empty"}
+                    />
+                  ))}
+                  <span className="rating-text">({user.rating.toFixed(1)} / 5)</span>
+                </div>
+              )}
 
               {user.bio && <p className="profile-bio">{user.bio}</p>}
             </div>
@@ -970,9 +1003,102 @@ export default function UserProfile() {
 
         {/* Main Content */}
         <div className="main-content">
+          <div className="section-header">
+            <h2 className="section-title">My <span>Posted Works</span></h2>
+            <button onClick={() => setViewForm(!viewForm)} className="list-project-btn">
+              <Plus size={15} />
+              {viewForm ? "Cancel" : "List Project"}
+            </button>
+          </div>
+
+          {viewForm && <PostWorkForm handleViewForm={() => setViewForm(false)} />}
+
+          <div className="work-list">
+            {myProjects.length === 0 && (
+              <div className="no-bids">No projects posted yet. Click "List Project" to start!</div>
+            )}
+            {myProjects.map((work) => (
+              <div key={work._id} className="work-card">
+                <div style={{ flex: 1 }}>
+                  <h3 className="work-title">{work.title}</h3>
+                  <p className="work-desc">{work.description}</p>
+                  <div className="work-tags">
+                    <span className="budget-tag">₹ {work.budget?.toLocaleString('en-IN')}</span>
+                    {work.status === "accepted" && (
+                      <span className="status-tag status-accepted"><CheckCircle size={11} /> Accepted</span>
+                    )}
+                    {work.status === "in-progress" && (
+                      <span className="status-tag status-progress"><Eye size={11} /> In Progress</span>
+                    )}
+                    {work.status === "pending" && (
+                      <span className="status-tag status-pending"><AlertCircle size={11} /> Pending</span>
+                    )}
+                    {work.status === "completed" && (
+                      <span className="status-tag status-accepted"><CheckCircle size={11} /> Completed</span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleViewBiddings(work._id)}
+                  className="view-bids-btn"
+                >
+                  {activeBidProjectId === work._id && viewBids ? "Hide Bids" : "View Bids"}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {viewBids && (
+            <div className="bids-section">
+              <div className="divider-line" />
+              <div className="section-header">
+                <h2 className="section-title">Bids <span>Received</span></h2>
+                <button
+                  onClick={() => setViewBids(false)}
+                  style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '1.2rem' }}
+                >✕</button>
+              </div>
+              <p className="bids-count">{bids?.length ?? 0} bid{(bids?.length ?? 0) !== 1 ? 's' : ''} on this project</p>
+
+              {!bids || bids.length === 0 ? (
+                <div className="no-bids">No bids yet. Check back soon 👀</div>
+              ) : (
+                bids.map((bid) => (
+                  <div key={bid._id} className="bid-card">
+                    <div style={{ flex: 1 }}>
+                      <h3 className="bid-name">{bid?.freelancer?.user?.name || "Freelancer"}</h3>
+                      <p className="bid-skills">{bid?.freelancer?.skills}</p>
+                      <p className="bid-amount">₹ {bid.amount?.toLocaleString('en-IN')} INR</p>
+                      <div className="bid-desc">
+                        <UserCircle size={13} />
+                        {bid?.freelancer?.description}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
+                      {bid.status === "accepted" ? (
+                        <span className="status-tag status-accepted"><CheckCircle size={11} /> Accepted</span>
+                      ) : (
+                        <button
+                          className="accept-btn"
+                          onClick={() => handleAcceptBid(bid._id)}
+                        >
+                          Accept Bid
+                        </button>
+                      )}
+                      {bid.status === "rejected" && (
+                        <span className="status-tag status-pending">Rejected</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          <div className="divider-line" />
+
           {isFreelancer ? (
             <>
-              {/* ── FREELANCER VIEW ── */}
               <div className="section-header">
                 <h2 className="section-title">My <span>Portfolio</span></h2>
               </div>
@@ -999,7 +1125,7 @@ export default function UserProfile() {
                   ))}
                 </div>
               ) : (
-                <div className="no-bids" style={{ marginBottom: '2rem' }}>No projects added yet. Add your first one below ↓</div>
+                <div className="no-bids" style={{ marginBottom: '2rem' }}>No portfolio projects added yet. Add your first one below ↓</div>
               )}
 
               <div className="divider-line" />
@@ -1054,208 +1180,109 @@ export default function UserProfile() {
               </div>
             </>
           ) : (
-            <>
-              {/* ── CLIENT VIEW ── */}
-              <div className="section-header">
-                <h2 className="section-title">My <span>Posted Works</span></h2>
-                <button onClick={() => setViewForm(!viewForm)} className="list-project-btn">
-                  <Plus size={15} />
-                  {viewForm ? "Cancel" : "List Project"}
+            !showBecomeForm ? (
+              <div className="become-banner">
+                <div className="become-tag">
+                  <Zap size={10} />
+                  Opportunity
+                </div>
+                <h2 className="become-title">
+                  Ready to start<br />
+                  <span>earning?</span>
+                </h2>
+                <p className="become-sub">
+                  Become a freelancer on Kaam-Karo. Showcase your skills, connect with clients, and get paid for what you're actually good at.
+                </p>
+                <button className="become-btn" onClick={() => setShowBecomeForm(true)}>
+                  <Zap size={16} />
+                  Become a Freelancer
                 </button>
               </div>
-
-              {viewForm && <PostWorkForm handleViewForm={() => setViewForm(false)} />}
-
-              <div className="work-list">
-                {myProjects.length === 0 && (
-                  <div className="no-bids">No projects posted yet. Click "List Project" to start!</div>
-                )}
-                {myProjects.map((work) => (
-                  <div key={work._id} className="work-card">
-                    <div style={{ flex: 1 }}>
-                      <h3 className="work-title">{work.title}</h3>
-                      <p className="work-desc">{work.description}</p>
-                      <div className="work-tags">
-                        <span className="budget-tag">₹ {work.budget?.toLocaleString('en-IN')}</span>
-                        {work.status === "accepted" && (
-                          <span className="status-tag status-accepted"><CheckCircle size={11} /> Accepted</span>
-                        )}
-                        {work.status === "in-progress" && (
-                          <span className="status-tag status-progress"><Eye size={11} /> In Progress</span>
-                        )}
-                        {work.status === "pending" && (
-                          <span className="status-tag status-pending"><AlertCircle size={11} /> Pending</span>
-                        )}
-                        {work.status === "completed" && (
-                          <span className="status-tag status-accepted"><CheckCircle size={11} /> Completed</span>
-                        )}
-                      </div>
+            ) : (
+              <div className="add-form-wrap">
+                <div className="section-header" style={{ marginBottom: '1.5rem' }}>
+                  <h2 className="section-title">Register as <span>Freelancer</span></h2>
+                  <button
+                    onClick={() => setShowBecomeForm(false)}
+                    style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '1.2rem' }}
+                  >✕</button>
+                </div>
+                <form onSubmit={handleBecomeFreelancer}>
+                  <div className="form-row">
+                    <div>
+                      <label className="field-lbl">Your Bio / Description</label>
+                      <textarea
+                        name="description"
+                        value={becomeData.description}
+                        onChange={handleBecomeChange}
+                        placeholder="Tell clients what you do and what makes you great..."
+                        rows="3"
+                        className="field-ta"
+                      />
                     </div>
-                    <button
-                      onClick={() => handleViewBiddings(work._id)}
-                      className="view-bids-btn"
-                    >
-                      {activeBidProjectId === work._id && viewBids ? "Hide Bids" : "View Bids"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Bids Section */}
-              {viewBids && (
-                <div className="bids-section">
-                  <div className="divider-line" />
-                  <div className="section-header">
-                    <h2 className="section-title">Bids <span>Received</span></h2>
-                    <button
-                      onClick={() => setViewBids(false)}
-                      style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '1.2rem' }}
-                    >✕</button>
-                  </div>
-                  <p className="bids-count">{bids?.length ?? 0} bid{(bids?.length ?? 0) !== 1 ? 's' : ''} on this project</p>
-
-                  {!bids || bids.length === 0 ? (
-                    <div className="no-bids">No bids yet. Check back soon 👀</div>
-                  ) : (
-                    bids.map((bid) => (
-                      <div key={bid._id} className="bid-card">
-                        <div style={{ flex: 1 }}>
-                          <h3 className="bid-name">{bid?.freelancer?.user?.name || "Freelancer"}</h3>
-                          <p className="bid-skills">{bid?.freelancer?.skills}</p>
-                          <p className="bid-amount">₹ {bid.amount?.toLocaleString('en-IN')} INR</p>
-                          <div className="bid-desc">
-                            <UserCircle size={13} />
-                            {bid?.freelancer?.description}
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
-                          {bid.status === "accepted" ? (
-                            <span className="status-tag status-accepted"><CheckCircle size={11} /> Accepted</span>
-                          ) : (
-                            <button
-                              className="accept-btn"
-                              onClick={() => handleAcceptBid(bid._id)}
-                            >
-                              Accept Bid
-                            </button>
-                          )}
-                          {bid.status === "rejected" && (
-                            <span className="status-tag status-pending">Rejected</span>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-
-              <div className="divider-line" />
-
-              {/* Become Freelancer Banner */}
-              {!showBecomeForm ? (
-                <div className="become-banner">
-                  <div className="become-tag">
-                    <Zap size={10} />
-                    Opportunity
-                  </div>
-                  <h2 className="become-title">
-                    Ready to start<br />
-                    <span>earning?</span>
-                  </h2>
-                  <p className="become-sub">
-                    Become a freelancer on Kaam-Karo. Showcase your skills, connect with clients, and get paid for what you're actually good at.
-                  </p>
-                  <button className="become-btn" onClick={() => setShowBecomeForm(true)}>
-                    <Zap size={16} />
-                    Become a Freelancer
-                  </button>
-                </div>
-              ) : (
-                <div className="add-form-wrap">
-                  <div className="section-header" style={{ marginBottom: '1.5rem' }}>
-                    <h2 className="section-title">Register as <span>Freelancer</span></h2>
-                    <button
-                      onClick={() => setShowBecomeForm(false)}
-                      style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '1.2rem' }}
-                    >✕</button>
-                  </div>
-                  <form onSubmit={handleBecomeFreelancer}>
-                    <div className="form-row">
+                    <div>
+                      <label className="field-lbl">Skills (comma separated)</label>
+                      <input
+                        name="skills"
+                        value={becomeData.skills}
+                        onChange={handleBecomeChange}
+                        type="text"
+                        placeholder="React, Node.js, MongoDB, Figma..."
+                        className="field-inp"
+                      />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                       <div>
-                        <label className="field-lbl">Your Bio / Description</label>
-                        <textarea
-                          name="description"
-                          value={becomeData.description}
+                        <label className="field-lbl">Category</label>
+                        <select
+                          name="category"
+                          value={becomeData.category}
                           onChange={handleBecomeChange}
-                          placeholder="Tell clients what you do and what makes you great..."
-                          rows="3"
-                          className="field-ta"
-                        />
+                          className="field-inp"
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <option value="">Select category</option>
+                          <option>Web Development</option>
+                          <option>Mobile Development</option>
+                          <option>UI/UX Design</option>
+                          <option>Graphic Design</option>
+                          <option>Content Writing</option>
+                          <option>Digital Marketing</option>
+                          <option>Data Science</option>
+                          <option>Other</option>
+                        </select>
                       </div>
                       <div>
-                        <label className="field-lbl">Skills (comma separated)</label>
+                        <label className="field-lbl">Experience (years)</label>
                         <input
-                          name="skills"
-                          value={becomeData.skills}
+                          name="experience"
+                          value={becomeData.experience}
                           onChange={handleBecomeChange}
-                          type="text"
-                          placeholder="React, Node.js, MongoDB, Figma..."
+                          type="number"
+                          min="0"
+                          max="50"
+                          placeholder="e.g. 3"
                           className="field-inp"
                         />
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div>
-                          <label className="field-lbl">Category</label>
-                          <select
-                            name="category"
-                            value={becomeData.category}
-                            onChange={handleBecomeChange}
-                            className="field-inp"
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <option value="">Select category</option>
-                            <option>Web Development</option>
-                            <option>Mobile Development</option>
-                            <option>UI/UX Design</option>
-                            <option>Graphic Design</option>
-                            <option>Content Writing</option>
-                            <option>Digital Marketing</option>
-                            <option>Data Science</option>
-                            <option>Other</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="field-lbl">Experience (years)</label>
-                          <input
-                            name="experience"
-                            value={becomeData.experience}
-                            onChange={handleBecomeChange}
-                            type="number"
-                            min="0"
-                            max="50"
-                            placeholder="e.g. 3"
-                            className="field-inp"
-                          />
-                        </div>
-                      </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                      <button type="submit" className="add-btn" disabled={freelancerLoading}>
-                        <Zap size={16} />
-                        {freelancerLoading ? "Registering…" : "Register as Freelancer"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowBecomeForm(false)}
-                        style={{ padding: '0.8rem 1.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-            </>
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                    <button type="submit" className="add-btn" disabled={freelancerLoading}>
+                      <Zap size={16} />
+                      {freelancerLoading ? "Registering…" : "Register as Freelancer"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowBecomeForm(false)}
+                      style={{ padding: '0.8rem 1.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )
           )}
         </div>
       </main>

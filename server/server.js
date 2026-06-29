@@ -11,13 +11,17 @@ import adminRoutes from "./routes/adminRoutes.js"
 import freelancerRoutes from "./routes/freelancerRoutes.js"
 import projectRoutes from "./routes/projectRoutes.js"
 import errorHandler from "./middleware/errorHandler.js"
+import cors from "cors"
 
 
-const PORT = process.env.PORT || 8000
+const PORT = process.env.PORT || 8080
 const app = express()
 
 // DB CONNECTION
 connectDB()
+
+// CORS
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
 
 // Body-Parser
 app.use(express.json())

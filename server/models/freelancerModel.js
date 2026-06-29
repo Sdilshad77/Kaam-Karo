@@ -22,6 +22,14 @@ const freelancerSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    rating: {
+        type: Number,
+        default: 0
+    },
+    ratingCount: {
+        type: Number,
+        default: 0
+    },
 }, {
     timestamps: true
 })

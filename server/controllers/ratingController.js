@@ -1,4 +1,5 @@
 import Rating from "../models/ratingModel.js"
+import Freelancer from "../models/freelancerModel.js"
 
 
 
@@ -36,6 +37,17 @@ const addRating = async (req, res) => {
 
         // Populate user info so UI can display reviewer details
         await newRating.populate('user')
+
+        // Recompute and update freelancer's avg rating
+        const allRatings = await Rating.find({ freelancer: req.params.fid })
+        if (allRatings.length > 0) {
+            const avg = allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length
+            await Freelancer.findOneAndUpdate(
+                { user: req.params.fid },
+                { rating: Math.round(avg * 10) / 10, ratingCount: allRatings.length },
+                { new: true }
+            )
+        }
 
         res.status(201).json(newRating)
 

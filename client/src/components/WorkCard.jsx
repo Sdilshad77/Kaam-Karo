@@ -100,6 +100,14 @@ const cardCss = `
   }
 `
 
+// Inject styles only once at module load time
+if (typeof document !== 'undefined' && !document.getElementById('wc-styles')) {
+  const styleEl = document.createElement('style')
+  styleEl.id = 'wc-styles'
+  styleEl.textContent = cardCss
+  document.head.appendChild(styleEl)
+}
+
 const WorkCard = ({ work }) => {
   const status = work.status || 'pending'
   const statusStyle = STATUS_STYLES[status] || STATUS_STYLES.pending
@@ -109,9 +117,7 @@ const WorkCard = ({ work }) => {
     : []
 
   return (
-    <>
-      <style>{cardCss}</style>
-      <div className="wc-card">
+    <div className="wc-card">
 
         {/* top row */}
         <div className="wc-top">
@@ -178,10 +184,9 @@ const WorkCard = ({ work }) => {
             </span>
           </div>
 
-          <BidModal work={work} />
+          {(!work.freelancer && work.status === 'pending') && <BidModal work={work} />}
         </div>
-      </div>
-    </>
+    </div>
   )
 }
 

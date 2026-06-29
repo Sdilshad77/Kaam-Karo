@@ -131,6 +131,7 @@ const updateUserProfile = async (req, res) => {
         isAdmin: updatedUser.isAdmin,
         isFreelancer: updatedUser.isFreelancer,
         credits: updatedUser.credits,
+        rating: updatedUser.rating,
         token
     })
 }

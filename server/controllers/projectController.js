@@ -41,11 +41,11 @@ const listProject = async (req, res) => {
 
 const getListedProjects = async (req, res) => {
 
-    const projects = await Project.find().populate('user')
+    const projects = await Project.find().populate('user').populate('freelancer')
 
     if (!projects) {
         res.status(404)
-        throw new Error("Projectd Not Found")
+        throw new Error("Projects Not Found")
     }
 
     res.status(200).json(projects)
@@ -113,8 +113,13 @@ const acceptProjectRequest = async (req, res) => {
 
 
     if (updatedBid.status === "accepted") {
-        // Assign Freelancer to project
-        const updatedProject = await Project.findByIdAndUpdate(bid.project._id, { freelancer: bid.freelancer._id }, { new: true }).populate("freelancer")
+        // Assign Freelancer to project and mark it in-progress
+        const updatedProject = await Project.findByIdAndUpdate(
+            bid.project._id,
+            { freelancer: bid.freelancer._id, status: "in-progress" },
+            { new: true }
+        ).populate("freelancer")
+
         res.status(200).json({
             project: updatedProject,
             bid: updatedBid

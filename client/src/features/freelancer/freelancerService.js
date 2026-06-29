@@ -39,6 +39,12 @@ const bidToProject = async (formData, token) => {
     return response.data
 }
 
-const freelancerService = { fetchFreelancers, fetchFreelancer, becomeFreelancer, addProject, bidToProject, addRating, fetchRatings }
+const checkBidStatus = async (projectId, token) => {
+    let options = { headers: { authorization: `Bearer ${token}` } }
+    const response = await axios.get('/api/freelancer/project/' + projectId + '/bid-status', options)
+    return response.data
+}
+
+const freelancerService = { fetchFreelancers, fetchFreelancer, becomeFreelancer, addProject, bidToProject, checkBidStatus, addRating, fetchRatings }
 
 export default freelancerService

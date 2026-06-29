@@ -13,6 +13,7 @@ router.get("/profile/:uid", freelancerController.getFreelancer)
 router.post("/add-me", protect.forAuthUsers, freelancerController.becomeFreelancer)
 
 router.get("/project", protect.forAuthUsers, freelancerController.getMyPreviousProjects)
+router.get("/project/:pid/bid-status", protect.forAuthUsers, freelancerController.checkProjectBidStatus)
 router.post("/project/:pid", protect.forAuthUsers, freelancerController.applyForProject)
 router.put("/project/:pid", freelancerController.submitProject)
 

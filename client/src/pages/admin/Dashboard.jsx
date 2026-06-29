@@ -31,15 +31,15 @@ const css = `
       linear-gradient(90deg, rgba(200,255,100,0.03) 1px, transparent 1px);
     background-size: 52px 52px;
     mask-image: radial-gradient(ellipse 90% 50% at 50% 0%, black 20%, transparent 100%);
-    animation: ad-grid 24s linear infinite;
+    animation: none;
   }
-  @keyframes ad-grid { from{background-position:0 0} to{background-position:52px 52px} }
+  @keyframes ad-grid { from{background-position:0 0} to{background-position:0 0} }
 
   .ad-blob {
     position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0;
   }
-  .ad-blob-1 { width:350px;height:350px; background:rgba(200,255,100,0.05); top:-100px;left:-80px; animation:ad-float 12s ease-in-out infinite; }
-  .ad-blob-2 { width:300px;height:300px; background:rgba(180,125,255,0.06); bottom:-80px;right:-60px; animation:ad-float 15s ease-in-out infinite reverse; }
+  .ad-blob-1 { width:350px;height:350px; background:rgba(200,255,100,0.05); top:-100px;left:-80px; animation:ad-float 12s ease-in-out infinite; will-change:transform; }
+  .ad-blob-2 { width:300px;height:300px; background:rgba(180,125,255,0.06); bottom:-80px;right:-60px; animation:ad-float 15s ease-in-out infinite reverse; will-change:transform; }
   @keyframes ad-float { 0%,100%{transform:translate(0,0)} 50%{transform:translate(14px,-18px)} }
 
   .ad-inner {

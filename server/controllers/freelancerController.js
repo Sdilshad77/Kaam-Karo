@@ -77,6 +77,19 @@ const applyForProject = async (req, res) => {
     throw new Error("Freelancer Not Exist");
   }
 
+  // Prevent bids on already assigned / in-progress projects
+  if (project.freelancer || project.status === "in-progress") {
+    res.status(409);
+    throw new Error("Cannot bid: this project is already assigned.");
+  }
+
+  // Prevent duplicate bid by same freelancer
+  const existingBid = await Bid.findOne({ project: projectId, freelancer: freelancer._id });
+  if (existingBid) {
+    res.status(409);
+    throw new Error("You have already placed a bid on this project.");
+  }
+
   // Check if bidder has credits
   if (user.credits <= 0) {
     res.status(409);
@@ -103,6 +116,21 @@ const applyForProject = async (req, res) => {
 
   res.status(201).json(bid);
 };
+
+// Check if current freelancer has already bid on this project
+const checkProjectBidStatus = async (req, res) => {
+  const projectId = req.params.pid
+  const userId = req.user._id
+
+  const freelancer = await Freelancer.findOne({ user: userId })
+  if (!freelancer) {
+    res.status(409)
+    throw new Error("Freelancer Not Exist")
+  }
+
+  const existingBid = await Bid.findOne({ project: projectId, freelancer: freelancer._id })
+  res.status(200).json({ hasBid: Boolean(existingBid), bid: existingBid })
+}
 
 // Submit Project Status
 const submitProject = async (req, res) => {
@@ -318,6 +346,7 @@ const getFreelancer = async (req, res) => {
 const freelancerController = {
   becomeFreelancer,
   applyForProject,
+  checkProjectBidStatus,
   submitProject,
   getMyPreviousProjects,
   getMyWork,

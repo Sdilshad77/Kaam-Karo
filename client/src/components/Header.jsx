@@ -22,8 +22,7 @@ const styles = `
     background: rgba(10, 10, 14, 0.78);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-    box-shadow: 0 1px 0 rgba(200,255,100,0.06), 0 4px 24px rgba(0,0,0,0.35);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.4), 0 1px 0 rgba(200,255,100,0.05);
     transition: padding 0.35s cubic-bezier(0.22,1,0.36,1),
                 background 0.35s ease;
     animation: hdr-fadeDown 0.5s cubic-bezier(0.22,1,0.36,1) both;
@@ -261,15 +260,7 @@ const Header = () => {
     setMenuOpen(false)
     navigate('/')
   }
- 
-  const navLinks = (
-    <>
-      <Link to="/work"    className="hdr-link" onClick={() => setMenuOpen(false)}>Find Work</Link>
-      <Link to="/talent"  className="hdr-link" onClick={() => setMenuOpen(false)}>Browse Talent</Link>
-      <a                  className="hdr-link">How It Works</a>
-    </>
-  )
- 
+
   const authLinks = user ? (
     <>
       <Link

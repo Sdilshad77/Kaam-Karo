@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Base font — Poppins is loaded via index.html <link> tag */
+/* Base font */
 * {
   box-sizing: border-box;
 }
@@ -9,4 +9,79 @@ body {
   font-family: "DM Sans", "Poppins", sans-serif;
   margin: 0;
   padding: 0;
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  /* Prevent layout shifts */
+  overflow-x: hidden;
+}
+
+/* ── GLOBAL SCROLL PERFORMANCE FIXES ─────────────────────────────────────────
+   background-position animations are CPU-painted (not GPU composited).
+   We override all grid-drift / grid animations to use opacity fade instead,
+   which IS composited and doesn't cause scroll jank.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* Stop ALL background-position keyframe animations — they cause CPU repaints */
+@keyframes hm-grid-drift  { from {} to {} }
+@keyframes tl-grid        { from {} to {} }
+@keyframes aw-grid        { from {} to {} }
+@keyframes fp-grid        { from {} to {} }
+
+/* GPU-promote all fixed decorative blobs */
+.tl-blob,
+.tl-blob-1,
+.tl-blob-2,
+.aw-blob,
+.aw-blob-1,
+.aw-blob-2,
+.fp-blob,
+.fp-blob-1,
+.fp-blob-2 {
+  will-change: transform;
+  transform: translateZ(0);
+  /* Contain painting to their own layer */
+  contain: layout style;
+}
+
+/* GPU-promote animated grid backgrounds */
+.hm-hero-grid,
+.tl-grid-bg,
+.aw-grid-bg,
+.fp-bg-grid {
+  will-change: auto;
+  transform: translateZ(0);
+  /* Disable the animation entirely — static grid is still beautiful */
+  animation: none !important;
+}
+
+/* Reduce header blur — blur(20px) is very expensive on scroll */
+.hdr-bar {
+  backdrop-filter: blur(10px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
+}
+
+/* GPU-promote sticky header */
+.hdr-bar {
+  will-change: padding;
+  transform: translateZ(0);
+}
+
+/* Promote card hover transitions to compositor */
+.tl-card,
+.wc-card,
+.fp-proj-card,
+.fp-section,
+.bid-card,
+.work-card {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

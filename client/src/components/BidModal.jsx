@@ -1,6 +1,7 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { createBid } from "../features/freelancer/freelancerSlice"
+import freelancerService from "../features/freelancer/freelancerService"
 import { toast } from "react-toastify"
 import { createPortal } from "react-dom"
 
@@ -121,6 +122,14 @@ const modalCss = `
   }
 `
 
+// Inject BidModal styles only once
+if (typeof document !== 'undefined' && !document.getElementById('bid-modal-styles')) {
+  const styleEl = document.createElement('style')
+  styleEl.id = 'bid-modal-styles'
+  styleEl.textContent = modalCss
+  document.head.appendChild(styleEl)
+}
+
 export function BidModal({ work }) {
   const dispatch = useDispatch()
   const { user } = useSelector(state => state.auth)
@@ -129,8 +138,10 @@ export function BidModal({ work }) {
   const [isOpen,     setIsOpen]     = useState(false)
   const [bidAmount,  setBidAmount]  = useState("")
   const [submitting, setSubmitting] = useState(false)
+  const [hasBid,     setHasBid]     = useState(false)
+  const [loadingBidStatus, setLoadingBidStatus] = useState(false)
 
-  const isAccepted = work.status === "accepted" || work.status === "in-progress"
+  const isAssigned = Boolean(work.freelancer) || work.status === "in-progress" || hasBid
 
   const handleOpen = () => {
     if (!user) {
@@ -141,12 +152,20 @@ export function BidModal({ work }) {
       toast.warning("Only freelancers can place bids. Register as a freelancer first.")
       return
     }
+    if (hasBid) {
+      toast.info("You have already placed a bid on this project.")
+      return
+    }
     setIsOpen(true)
   }
 
   const handleSubmit = async () => {
     if (!bidAmount || isNaN(bidAmount) || Number(bidAmount) <= 0) {
       toast.error("Please enter a valid bid amount!")
+      return
+    }
+    if (hasBid) {
+      toast.error("You have already placed a bid on this project.")
       return
     }
     setSubmitting(true)
@@ -156,6 +175,7 @@ export function BidModal({ work }) {
         toast.success("Bid placed successfully! 🎉")
         setIsOpen(false)
         setBidAmount("")
+        setHasBid(true)
       } else {
         toast.error(result.payload || "Failed to place bid. Try again.")
       }
@@ -164,6 +184,25 @@ export function BidModal({ work }) {
     }
   }
 
+  useEffect(() => {
+    if (!user || !user.isFreelancer) {
+      setHasBid(false)
+      return
+    }
+    const fetchBidStatus = async () => {
+      setLoadingBidStatus(true)
+      try {
+        const result = await freelancerService.checkBidStatus(work._id, user.token)
+        setHasBid(result.hasBid)
+      } catch (error) {
+        setHasBid(false)
+      } finally {
+        setLoadingBidStatus(false)
+      }
+    }
+    fetchBidStatus()
+  }, [user, work._id])
+
   const handleCancel = () => {
     setIsOpen(false)
     setBidAmount("")
@@ -171,14 +210,19 @@ export function BidModal({ work }) {
 
   return (
     <>
-      <style>{modalCss}</style>
 
       <button
         onClick={handleOpen}
-        disabled={isAccepted}
-        className={`bid-trigger-btn${isAccepted ? ' not-available' : !user ? ' need-login' : ''}`}
+        disabled={isAssigned || loadingBidStatus}
+        className={`bid-trigger-btn${isAssigned ? ' not-available' : !user ? ' need-login' : ''}`}
       >
-        {isAccepted ? "Not Available" : !user ? "Login to Bid" : "Place Bid"}
+        {loadingBidStatus
+          ? "Checking..."
+          : isAssigned
+          ? (hasBid ? "Already Bid" : "Not Available")
+          : !user
+          ? "Login to Bid"
+          : "Place Bid"}
       </button>
 
       {isOpen && createPortal(

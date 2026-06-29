@@ -33,14 +33,16 @@ const css = `
     background: rgba(180,125,255,0.07);
     top: -150px; left: -150px;
     animation: tl-float 12s ease-in-out infinite;
+    will-change: transform;
   }
   .tl-blob-2 {
     width: 420px; height: 420px;
     background: rgba(200,255,100,0.06);
     bottom: -100px; right: -100px;
     animation: tl-float 15s ease-in-out infinite reverse;
+    will-change: transform;
   }
-  @keyframes tl-float { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-24px)} }
+  @keyframes tl-float { 0%,100%{transform:translate(0,0) translateZ(0)} 50%{transform:translate(20px,-24px) translateZ(0)} }
 
   /* animated grid */
   .tl-grid-bg {
@@ -50,9 +52,9 @@ const css = `
       linear-gradient(90deg, rgba(200,255,100,0.03) 1px, transparent 1px);
     background-size: 52px 52px;
     mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 100%);
-    animation: tl-grid 24s linear infinite;
+    animation: none;
   }
-  @keyframes tl-grid { from{background-position:0 0} to{background-position:52px 52px} }
+  @keyframes tl-grid { from{background-position:0 0} to{background-position:0 0} }
 
   /* noise */
   .tl-noise {
@@ -275,7 +277,6 @@ export default function Talents() {
     freelancers,
     freelancerLoading,
     freelancerError,
-    freelancerSuccess,
     freelancerErrorMessage,
   } = useSelector((state) => state.freelancer);
 
@@ -353,7 +354,9 @@ export default function Talents() {
         {/* ── GRID ── */}
         <div className="tl-grid">
           {filtered.length > 0 ? (
-            filtered.map((talent, i) => (
+            filtered.map((talent, i) => {
+              const ratingValue = talent?.rating ? Number(talent.rating).toFixed(1) : null
+              return (
               <div
                 key={talent._id}
                 className="tl-card"
@@ -367,10 +370,12 @@ export default function Talents() {
                       backgroundImage: `url(${talent?.user?.profilePic || "https://i.pravatar.cc/150?u=" + talent._id})`,
                     }}
                   />
-                  <div className="tl-rating">
-                    <Star size={11} fill="#f59e0b" color="#f59e0b" />
-                    4.9
-                  </div>
+                  {ratingValue && (
+                    <div className="tl-rating">
+                      <Star size={11} fill="#f59e0b" color="#f59e0b" />
+                      {ratingValue}
+                    </div>
+                  )}
                 </div>
 
                 {/* info */}
@@ -405,7 +410,8 @@ export default function Talents() {
                   </Link>
                 </div>
               </div>
-            ))
+              )
+            })
           ) : (
             <div className="tl-empty">
               <div className="tl-empty-icon">🔍</div>

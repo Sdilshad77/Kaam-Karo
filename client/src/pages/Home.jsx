@@ -48,11 +48,11 @@ const css = `
       linear-gradient(90deg, rgba(200,255,110,0.04) 1px, transparent 1px);
     background-size: 48px 48px;
     mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 30%, transparent 100%);
-    animation: hm-grid-drift 18s linear infinite;
+    animation: none;
   }
   @keyframes hm-grid-drift {
     from { background-position: 0 0; }
-    to   { background-position: 48px 48px; }
+    to   { background-position: 0 0; }
   }
 
   /* noise grain */
@@ -763,7 +763,7 @@ const Home = () => {
               chasing exciting projects — we bring opportunities to your fingertips.
             </p>
             <div className="hm-cta-row">
-              <Link to="/work/create" className="hm-btn-primary">Post a Gig →</Link>
+              <Link to="/auth/profile" className="hm-btn-primary">Post a Gig →</Link>
               <Link to="/work"        className="hm-btn-ghost">Find Work</Link>
             </div>
             <div className="hm-stats">
@@ -857,12 +857,12 @@ const Home = () => {
           <div className="hm-cats-grid">
             {CATS.map((c, i) => (
               <RevealSection key={i} delay={i * 55}>
-                <a className="hm-cat">
+                <Link to={`/work`} className="hm-cat">
                   <span className="hm-cat-icon">{c.icon}</span>
                   <div className="hm-cat-name">{c.name}</div>
                   <div className="hm-cat-desc">{c.desc}</div>
                   <div className="hm-cat-count">{c.count}</div>
-                </a>
+                </Link>
               </RevealSection>
             ))}
           </div>
@@ -906,7 +906,7 @@ const Home = () => {
               </p>
               <div className="hm-cta-row" style={{ justifyContent: 'center' }}>
                 <Link to="/register" className="hm-btn-primary">Start Freelancing →</Link>
-                <Link to="/work/create" className="hm-btn-ghost">Post a Project</Link>
+                <Link to="/auth/profile" className="hm-btn-ghost">Post a Project</Link>
               </div>
             </div>
           </RevealSection>
@@ -929,22 +929,32 @@ const Home = () => {
             {[
               {
                 title: 'For Freelancers',
-                links: ['Find Work', 'How It Works', 'Success Stories', 'Resources'],
+                links: [
+                  { label: 'Find Work',      to: '/work' },
+                  { label: 'How It Works',   to: '/how-it-works' },
+                  { label: 'Browse Talent',  to: '/talents' },
+                ],
               },
               {
                 title: 'For Clients',
-                links: ['Post a Gig', 'Browse Talent', 'Pricing', 'Enterprise'],
+                links: [
+                  { label: 'Post a Project', to: '/auth/profile' },
+                  { label: 'Browse Talent',  to: '/talents' },
+                ],
               },
               {
                 title: 'Company',
-                links: ['About Us', 'Contact', 'Privacy Policy', 'Terms of Service'],
+                links: [
+                  { label: 'Login',    to: '/login' },
+                  { label: 'Register', to: '/register' },
+                ],
               },
             ].map((col, i) => (
               <div key={i}>
                 <div className="hm-footer-col-title">{col.title}</div>
                 <div className="hm-footer-links">
                   {col.links.map((l, j) => (
-                    <a key={j} className="hm-footer-link">{l}</a>
+                    <Link key={j} to={l.to} className="hm-footer-link">{l.label}</Link>
                   ))}
                 </div>
               </div>
@@ -953,9 +963,9 @@ const Home = () => {
           <div className="hm-footer-bottom">
             <span className="hm-footer-copy">© 2025 Kaam-Karo. All rights reserved.</span>
             <div className="hm-footer-socials">
-              {['Twitter', 'LinkedIn', 'Instagram'].map(s => (
-                <a key={s} className="hm-footer-social">{s}</a>
-              ))}
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hm-footer-social">Twitter</a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hm-footer-social">LinkedIn</a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hm-footer-social">Instagram</a>
             </div>
           </div>
         </div>

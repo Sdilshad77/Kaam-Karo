@@ -25,6 +25,8 @@ const bidSchema = new mongoose.Schema({
 })
 
 
+bidSchema.index({ project: 1, freelancer: 1 }, { unique: true })
+
 const Bid = mongoose.model("Bid", bidSchema)
 
 export default Bid

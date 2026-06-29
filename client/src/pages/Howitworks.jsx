@@ -26,15 +26,15 @@ const css = `
       linear-gradient(90deg, rgba(200,255,100,0.035) 1px, transparent 1px);
     background-size: 52px 52px;
     mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 100%);
-    animation: hiw-grid 24s linear infinite;
+    animation: none;
   }
-  @keyframes hiw-grid { from{background-position:0 0} to{background-position:52px 52px} }
+  @keyframes hiw-grid { from{background-position:0 0} to{background-position:0 0} }
 
   .hiw-blob {
     position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0;
   }
-  .hiw-blob-1 { width:450px;height:450px; background:rgba(200,255,100,0.06); top:-120px;left:-100px; animation:hiw-float 12s ease-in-out infinite; }
-  .hiw-blob-2 { width:380px;height:380px; background:rgba(180,125,255,0.07); bottom:-80px;right:-80px; animation:hiw-float 15s ease-in-out infinite reverse; }
+  .hiw-blob-1 { width:450px;height:450px; background:rgba(200,255,100,0.06); top:-120px;left:-100px; animation:hiw-float 12s ease-in-out infinite; will-change:transform; }
+  .hiw-blob-2 { width:380px;height:380px; background:rgba(180,125,255,0.07); bottom:-80px;right:-80px; animation:hiw-float 15s ease-in-out infinite reverse; will-change:transform; }
   @keyframes hiw-float { 0%,100%{transform:translate(0,0)} 50%{transform:translate(18px,-22px)} }
 
   /* ── HERO ── */

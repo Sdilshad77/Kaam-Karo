@@ -39,12 +39,14 @@ const css = `
     background: rgba(200,255,100,0.05);
     top: -150px; left: -150px;
     animation: aw-float 14s ease-in-out infinite;
+    will-change: transform;
   }
   .aw-blob-2 {
     width: 400px; height: 400px;
     background: rgba(180,125,255,0.06);
     bottom: -100px; right: -100px;
     animation: aw-float 17s ease-in-out infinite reverse;
+    will-change: transform;
   }
   @keyframes aw-float { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-24px)} }
 
@@ -55,9 +57,9 @@ const css = `
       linear-gradient(90deg, rgba(200,255,100,0.03) 1px, transparent 1px);
     background-size: 52px 52px;
     mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 100%);
-    animation: aw-grid 24s linear infinite;
+    animation: none;
   }
-  @keyframes aw-grid { from{background-position:0 0} to{background-position:52px 52px} }
+  @keyframes aw-grid { from{background-position:0 0} to{background-position:0 0} }
 
   .aw-inner {
     position: relative; z-index: 1;
@@ -230,6 +232,9 @@ export default function AllWork() {
         (p) => p.category?.toLowerCase() === activeCategory.toLowerCase()
       );
     }
+
+    // Hide completed projects from the live projects feed
+    list = list.filter((p) => p.status?.toLowerCase() !== "completed");
 
     if (sortBy === "latest") {
       list = [...list].sort(

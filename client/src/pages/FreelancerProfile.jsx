@@ -31,9 +31,9 @@ const css = `
       linear-gradient(90deg, rgba(200,255,100,0.03) 1px, transparent 1px);
     background-size: 52px 52px;
     mask-image: radial-gradient(ellipse 80% 50% at 50% 0%, black 20%, transparent 100%);
-    animation: fp-grid 24s linear infinite;
+    animation: none;
   }
-  @keyframes fp-grid { from { background-position: 0 0 } to { background-position: 52px 52px } }
+  @keyframes fp-grid { from { background-position: 0 0 } to { background-position: 0 0 } }
 
   .fp-blob {
     position: fixed; border-radius: 50%; filter: blur(100px);
@@ -44,12 +44,14 @@ const css = `
     background: rgba(200,255,100,0.06);
     top: -120px; left: -100px;
     animation: fp-float 12s ease-in-out infinite;
+    will-change: transform;
   }
   .fp-blob-2 {
     width: 380px; height: 380px;
     background: rgba(180,125,255,0.07);
     bottom: -80px; right: -80px;
     animation: fp-float 15s ease-in-out infinite reverse;
+    will-change: transform;
   }
   @keyframes fp-float {
     0%, 100% { transform: translate(0, 0) }
@@ -381,13 +383,19 @@ export default function FreelancerProfile() {
               <div className="fp-category">{profile?.category}</div>
               <div className="fp-exp">{profile?.experience}+ years of experience</div>
               <div className="fp-meta-row">
-                <div className="fp-rating-pill">
-                  <Star size={12} fill="#f59e0b" color="#f59e0b" />
-                  {avgRating}
-                </div>
-                <span className="fp-review-count">
-                  {ratingsArr.length} review{ratingsArr.length !== 1 ? 's' : ''}
-                </span>
+                {ratingsArr.length > 0 ? (
+                  <>
+                    <div className="fp-rating-pill">
+                      <Star size={12} fill="#f59e0b" color="#f59e0b" />
+                      {avgRating}
+                    </div>
+                    <span className="fp-review-count">
+                      {ratingsArr.length} review{ratingsArr.length !== 1 ? 's' : ''}
+                    </span>
+                  </>
+                ) : (
+                  <span className="fp-review-count">No reviews yet</span>
+                )}
               </div>
             </div>
 
